@@ -121,10 +121,29 @@
             // 今はテストとして、ブラウザの共通おもちゃ箱（localStorage）に保存します！
             let currentData = JSON.parse(localStorage.getItem('allShifts')) || [];
             currentData.push({ name: userName, dates: sortedDates });
-            localStorage.setItem('allShifts', JSON.stringify(currentData));
-
-            alert("申請を送信しました！");
-
+            // ⭕ これからのコード（C#のAPIへ送信）
+            // ※「/api/shift」は、C#のコントローラーで設定した [Route("api/[controller]")] のURLです
+            fetch('/api/shift', {
+                method: 'POST', // 💡 C#の [HttpPost] を呼び出す
+                headers: {
+                    'Content-Type': 'application/json' // 💡 JSONデータを送るよという合図
+                },
+                body: JSON.stringify(jsonData) // 💡 [FromBody] に届く荷物（JSON文字列化）
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('通信エラーが発生しました。');
+                })
+                .then(data => {
+                    // C#側から return Ok(new { message = "..." }) で返ってきたメッセージを表示
+                    alert(data.message);
+                })
+                .catch(error => {
+                    console.error('エラー:', error);
+                    alert('送信に失敗しました。');
+                });
             if (liff.isInClient()) {
                 liff.sendMessages([{
                     type: 'text',
