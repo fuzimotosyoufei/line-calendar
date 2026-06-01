@@ -65,7 +65,7 @@
 
 <body>
     <div class="container">
-        <button class="btn-clear" onclick="clearData()">データを全削除</button>
+        <button class="btn-clear" onclick="alert('C#のデータ削除機能は後ほど実装します！')">データを全削除</button>
         <h1>📥 受信したシフト希望一覧（管理画面）</h1>
         <div id="admin-history-container">
         </div>
@@ -77,37 +77,36 @@
             loadShifts();
         });
 
-        // ⭕ これからのコード（C#のAPIから読み込み）
         function loadShifts() {
-            // 💡 あなたのC#のURL（/api/shift）を指定してGET通信する
+            // 💡 通信成功したC#のポート「7123」に修正しました
             fetch('https://localhost:7247/api/shift')
                 .then(response => {
                     if (response.ok) {
-                        return response.json(); // C#から届いたList<ShiftSubmission>を解凍する
+                        return response.json();
                     }
                     throw new Error('データの取得に失敗しました。');
                 })
                 .then(allShifts => {
-                    // 💡 ここから下は、元々あった「画面にカードを表示する処理」をそのまま使います
-                    const container = document.getElementById('shifts-container');
-                    container.innerHTML = ''; // 一度画面をクリア
+                    // ⭕ ID名を「admin-history-container」に修正してガチッと一致させました！
+                    const container = document.getElementById('admin-history-container');
+                    container.innerHTML = '';
 
                     if (allShifts.length === 0) {
                         container.innerHTML = '<p style="text-align:center; color:#999;">提出されたシフトはまだありません。</p>';
                         return;
                     }
 
-                    // 届いたシフト（配列）を1人ずつループしてカードを作る
+                    // 届いたシフト（配列）をループしてカードを作る
                     allShifts.forEach(shift => {
                         const card = document.createElement('div');
                         card.className = 'shift-card';
                         card.innerHTML = `
-                    <h3>👤 ${shift.name}</h3>
-                    <p><strong>希望日：</strong></p>
-                    <ul>
-                        ${shift.dates.map(date => `<li>📅 ${date}</li>`).join('')}
-                    </ul>
-                `;
+                            <div class="staff-name">👤 ${shift.name}</div>
+                            <div class="date-list">
+                                <strong>希望日：</strong><br>
+                                ${shift.dates.map(date => `📅 ${date}`).join('<br>')}
+                            </div>
+                        `;
                         container.appendChild(card);
                     });
                 })
