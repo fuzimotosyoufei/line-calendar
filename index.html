@@ -114,21 +114,25 @@
         });
 
         function submitData() {
-            if (selectedDates.length === 0) { alert("日付が選択されていません！"); return; }
+            if (selectedDates.length === 0) {
+                alert("日付が選択されていません！");
+                return;
+            }
             const sortedDates = [...selectedDates].sort();
 
-            // 💡 【重要】本当はここで「管理画面（データベース）」に送る処理を書きますが、
-            // 今はテストとして、ブラウザの共通おもちゃ箱（localStorage）に保存します！
-            let currentData = JSON.parse(localStorage.getItem('allShifts')) || [];
-            currentData.push({ name: userName, dates: sortedDates });
-            // ⭕ これからのコード（C#のAPIへ送信）
-            // ※「/api/shift」は、C#のコントローラーで設定した [Route("api/[controller]")] のURLです
+            // 💡 C#のModel（ShiftSubmission）の形に合わせたデータ（オブジェクト）を作成します
+            const sendData = {
+                name: userName,    // C#の Name にマッピングされます
+                dates: sortedDates // C#の Dates にマッピングされます
+            };
+
+            // ⭕ C#のAPIへ送信
             fetch('/api/shift', {
-                method: 'POST', // 💡 C#の [HttpPost] を呼び出す
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json' // 💡 JSONデータを送るよという合図
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(jsonData) // 💡 [FromBody] に届く荷物（JSON文字列化）
+                body: JSON.stringify(sendData) // 💡 さっき作った sendData をJSON文字列にして送る！
             })
                 .then(response => {
                     if (response.ok) {
@@ -137,20 +141,23 @@
                     throw new Error('通信エラーが発生しました。');
                 })
                 .then(data => {
-                    // C#側から return Ok(new { message = "..." }) で返ってきたメッセージを表示
+                    // C#側から return Ok(new { message = "..." }) で返ってきた文字を表示
                     alert(data.message);
+
+                    // LINEの中で開いている場合は、送信後に自動でトーク画面を閉じる
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{
+                            type: 'text',
+                            text: `【シフト希望】\n氏名: ${userName}\n${sortedDates.join("\n")}\n上記で申請します。`
+                        }]).then(() => { liff.closeWindow(); });
+                    }
                 })
                 .catch(error => {
                     console.error('エラー:', error);
                     alert('送信に失敗しました。');
                 });
-            if (liff.isInClient()) {
-                liff.sendMessages([{
-                    type: 'text',
-                    text: `【シフト希望】\n氏名: ${userName}\n${sortedDates.join("\n")}\n上記で申請します。`
-                }]).then(() => { liff.closeWindow(); });
-            }
         }
+
     </script>
 </body>
 
