@@ -77,34 +77,44 @@
             loadShifts();
         });
 
+        // ⭕ これからのコード（C#のAPIから読み込み）
         function loadShifts() {
-            const container = document.getElementById('admin-history-container');
-            const data = JSON.parse(localStorage.getItem('allShifts')) || [];
+            // 💡 あなたのC#のURL（/api/shift）を指定してGET通信する
+            fetch('https://localhost:7247/api/shift')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json(); // C#から届いたList<ShiftSubmission>を解凍する
+                    }
+                    throw new Error('データの取得に失敗しました。');
+                })
+                .then(allShifts => {
+                    // 💡 ここから下は、元々あった「画面にカードを表示する処理」をそのまま使います
+                    const container = document.getElementById('shifts-container');
+                    container.innerHTML = ''; // 一度画面をクリア
 
-            if (data.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#999;">まだ誰からもシフト提出はありません。</p>';
-                return;
-            }
+                    if (allShifts.length === 0) {
+                        container.innerHTML = '<p style="text-align:center; color:#999;">提出されたシフトはまだありません。</p>';
+                        return;
+                    }
 
-            container.innerHTML = '';
-            // 新しい順にループして画面にカードを作る
-            data.reverse().forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'shift-card';
-                card.innerHTML = `
-                    <div class="staff-name">👤 ${item.name} さん</div>
-                    <div class="date-list">📅 希望日:<br>${item.dates.join(', ')}</div>
+                    // 届いたシフト（配列）を1人ずつループしてカードを作る
+                    allShifts.forEach(shift => {
+                        const card = document.createElement('div');
+                        card.className = 'shift-card';
+                        card.innerHTML = `
+                    <h3>👤 ${shift.name}</h3>
+                    <p><strong>希望日：</strong></p>
+                    <ul>
+                        ${shift.dates.map(date => `<li>📅 ${date}</li>`).join('')}
+                    </ul>
                 `;
-                container.appendChild(card);
-            });
-        }
-
-        // データを綺麗さっぱり消す機能
-        function clearData() {
-            if (confirm("提出されたシフトデータをすべて消去しますか？")) {
-                localStorage.removeItem('allShifts');
-                loadShifts();
-            }
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('エラー:', error);
+                    alert('シフトデータの読み込みに失敗しました。');
+                });
         }
     </script>
 </body>
