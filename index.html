@@ -84,7 +84,8 @@
                 })
                 .catch((err) => {
                     console.log('LIFF初期化エラー:', err);
-                    document.getElementById('user-info').innerText = "※LINEアプリ以外から開かれています";
+                    // 💡 原因（err）をそのまま画面に表示させちゃう魔改造
+                    document.getElementById('user-info').innerText = "エラー原因: " + err;
                 });
 
             // カレンダー
