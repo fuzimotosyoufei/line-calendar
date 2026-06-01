@@ -18,6 +18,7 @@
             background: white;
             padding: 15px;
             border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
@@ -26,7 +27,6 @@
             color: #333;
         }
 
-        /* LINEでの名前が表示される場所のスタイル */
         #user-info {
             text-align: center;
             font-weight: bold;
@@ -54,12 +54,13 @@
 </head>
 
 <body>
-
     <div class="container">
         <div id="user-info">読み込み中...</div>
         <h2>📅 シフト希望入力</h2>
         <div id="calendar"></div>
-
+        <div id="selected-list"
+            style="margin-bottom: 20px; padding: 10px; background: #f9f9f9; border-radius: 5px; font-size: 14px; color: #555;">
+            選択中の日付： なし</div>
         <button class="btn-submit" onclick="submitData()">この内容で申請する</button>
     </div>
 
@@ -67,28 +68,24 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <script>
         let selectedDates = [];
+        let userName = "ゲストユーザー";
 
         document.addEventListener('DOMContentLoaded', function () {
-
-            // LINEの機能を初期化
-            // ※ "YOUR_LIFF_ID_HERE" は、次のステップで発行されるIDに後で書き換えます！
+            // ⚠️ YOUR_LIFF_ID_HERE をご自身の LIFF ID に書き換えてください
             liff.init({ liffId: "2010248077-69FEBbgt" })
                 .then(() => {
-                    if (!liff.isLoggedIn()) {
-                        liff.login();
-                    } else {
+                    if (!liff.isLoggedIn()) { liff.login(); }
+                    else {
                         liff.getProfile().then(profile => {
-                            document.getElementById('user-info').innerText = "こんにちは、" + profile.displayName + " さん";
+                            userName = profile.displayName;
+                            document.getElementById('user-info').innerText = "こんにちは、" + userName + " さん";
                         });
                     }
                 })
                 .catch((err) => {
-                    console.log('LIFF初期化エラー:', err);
-                    // 💡 原因（err）をそのまま画面に表示させちゃう魔改造
-                    document.getElementById('user-info').innerText = "エラー原因: " + err;
+                    document.getElementById('user-info').innerText = "※ブラウザモードで実行中（LINE外）";
                 });
 
-            // カレンダー
             const calendarEl = document.getElementById('calendar');
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
@@ -104,31 +101,35 @@
                         selectedDates.push(clickedDate);
                         info.dayEl.style.backgroundColor = '#ffcccc';
                     }
+
+                    const listEl = document.getElementById('selected-list');
+                    if (selectedDates.length > 0) {
+                        listEl.innerHTML = "<strong>選択中の日付：</strong><br>" + [...selectedDates].sort().join(", ");
+                    } else {
+                        listEl.innerText = "選択中の日付： なし";
+                    }
                 }
             });
             calendar.render();
         });
 
-        // 申請ボタン
         function submitData() {
-            if (selectedDates.length === 0) {
-                alert("日付が選択されていません！");
-                return;
-            }
+            if (selectedDates.length === 0) { alert("日付が選択されていません！"); return; }
+            const sortedDates = [...selectedDates].sort();
 
-            // LINEの中で開かれている場合、トークにメッセージを自動送信
+            // 💡 【重要】本当はここで「管理画面（データベース）」に送る処理を書きますが、
+            // 今はテストとして、ブラウザの共通おもちゃ箱（localStorage）に保存します！
+            let currentData = JSON.parse(localStorage.getItem('allShifts')) || [];
+            currentData.push({ name: userName, dates: sortedDates });
+            localStorage.setItem('allShifts', JSON.stringify(currentData));
+
+            alert("申請を送信しました！");
+
             if (liff.isInClient()) {
                 liff.sendMessages([{
                     type: 'text',
-                    text: "【シフト希望】\n" + selectedDates.join("\n") + "\n上記で申請します。"
-                }]).then(() => {
-                    alert("申請を送りました！");
-                    liff.closeWindow(); // 画面を閉じる
-                }).catch((err) => {
-                    alert("送信に失敗しました: " + err);
-                });
-            } else {
-                alert("（ブラウザテスト用）以下の日付で申請します：\n" + selectedDates.join("\n"));
+                    text: `【シフト希望】\n氏名: ${userName}\n${sortedDates.join("\n")}\n上記で申請します。`
+                }]).then(() => { liff.closeWindow(); });
             }
         }
     </script>

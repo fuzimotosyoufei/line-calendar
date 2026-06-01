@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シフト管理画面</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #eef2f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .shift-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-left: 6px solid #007bff;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .staff-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+
+        .date-list {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .btn-clear {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button class="btn-clear" onclick="clearData()">データを全削除</button>
+        <h1>📥 受信したシフト希望一覧（管理画面）</h1>
+        <div id="admin-history-container">
+        </div>
+    </div>
+
+    <script>
+        // 画面が開いたら自動でデータを読み込む
+        document.addEventListener('DOMContentLoaded', function () {
+            loadShifts();
+        });
+
+        function loadShifts() {
+            const container = document.getElementById('admin-history-container');
+            const data = JSON.parse(localStorage.getItem('allShifts')) || [];
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">まだ誰からもシフト提出はありません。</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            // 新しい順にループして画面にカードを作る
+            data.reverse().forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'shift-card';
+                card.innerHTML = `
+                    <div class="staff-name">👤 ${item.name} さん</div>
+                    <div class="date-list">📅 希望日:<br>${item.dates.join(', ')}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // データを綺麗さっぱり消す機能
+        function clearData() {
+            if (confirm("提出されたシフトデータをすべて消去しますか？")) {
+                localStorage.removeItem('allShifts');
+                loadShifts();
+            }
+        }
+    </script>
+</body>
+
+</html>
