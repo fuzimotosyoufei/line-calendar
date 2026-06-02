@@ -15,7 +15,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build-env /app/out .
 
-# Renderなどの環境でポートを動的に合わせるための設定
+# Renderなどの環境でポートを動的に合わせるための設定iiiiii
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
