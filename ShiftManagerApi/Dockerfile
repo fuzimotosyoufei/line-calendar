@@ -1,5 +1,4 @@
-﻿Dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /app
 
 # 1. 設計図だけを先にコピーして復元
