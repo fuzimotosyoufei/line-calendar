@@ -13,7 +13,7 @@ RUN dotnet publish -c Release -o out
 # 2. 実行用の軽量な環境にビルド成果物を移す
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build-env /app/out .
+COPY --from=build-env /app/out ./
 
 # Renderなどの環境でポートを動的に合わせるための設定iiiiii
 ENV ASPNETCORE_URLS=http://+:8080
